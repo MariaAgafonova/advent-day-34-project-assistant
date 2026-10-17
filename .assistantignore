@@ -1,0 +1,7 @@
+# Additional exclusions; mandatory secret/build exclusions cannot be overridden.
+DEVELOPMENT_STATE.md
+REPORT.md
+support/VERIFICATION.md
+docs/day34-verification.md
+# Run the fixture as its own --repo; do not confuse it with production chat APIs.
+project-assistant/fixtures/

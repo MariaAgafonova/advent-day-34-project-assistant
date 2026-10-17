@@ -1,27 +1,27 @@
-# Application architecture
+# Архитектура приложения
 
-NaToday («На сегодня») is an Android daily planner. It runs without registration or an application server. The app has one Gradle module, `app`, and uses Kotlin, Compose Material 3, ViewModel, StateFlow, Coroutines, Room, Preferences DataStore and Navigation Compose.
+NaToday («На сегодня») — ежедневник для Android. Работает без регистрации и без собственного сервера. В приложении один Gradle-модуль `app`; используются Kotlin, Compose Material 3, ViewModel, StateFlow, Coroutines, Room, Preferences DataStore и Navigation Compose.
 
-## Entry point and screens
+## Точка входа и экраны
 
-`app/src/main/java/ru/natoday/app/MainActivity.kt` is the Android activity and hosts the Navigation Compose graph. Routes are today, review/{day}, voice/{day}, and settings. A notification carries an epoch-day date to the review route; the Today destination remains beneath it in the navigation back stack.
+`app/src/main/java/ru/natoday/app/MainActivity.kt` — это Android-активити, которая содержит граф навигации Navigation Compose. Маршруты: today, review/{day}, voice/{day} и settings. Уведомление передаёт в маршрут review дату в виде epoch-day; экран Today остаётся под ним в стеке навигации.
 
-`ui/DayScreen.kt` contains the day list, task cards and evening review screen. `ui/PlannerViewModels.kt` owns task operations, selected date and review session counts. `ui/VoiceScreen.kt` and `ui/VoiceViewModel.kt` implement the editable voice preview. `ui/SettingsScreen.kt` controls reminder preferences. These paths are relative to `app/src/main/java/ru/natoday/app/`.
+`ui/DayScreen.kt` содержит список дня, карточки задач и экран вечернего разбора. `ui/PlannerViewModels.kt` отвечает за операции с задачами, выбранную дату и счётчики сессии разбора. `ui/VoiceScreen.kt` и `ui/VoiceViewModel.kt` реализуют редактируемый предпросмотр голосового ввода. `ui/SettingsScreen.kt` управляет настройками напоминаний. Эти пути указаны относительно `app/src/main/java/ru/natoday/app/`.
 
-## Local persistence
+## Локальное хранение
 
-`data/Task.kt` is a Room entity: id, title, scheduledDate, createdAt, completedAt. The planned date is LocalDate stored as epochDay. Creation and completion are Instant stored as epoch milliseconds. Time zone changes do not move tasks to a different calendar date.
+`data/Task.kt` — сущность Room: id, title, scheduledDate, createdAt, completedAt. Плановая дата — LocalDate, хранится как epochDay. Создание и выполнение — Instant, хранятся как epoch-миллисекунды. Смена часового пояса не переносит задачи на другую календарную дату.
 
-`data/TaskDao.kt` exposes a Flow for a chosen date. `data/TaskRepository.kt` validates titles and implements create, rename, complete/uncomplete, move, delete and restore. Moving updates scheduledDate on the same row; it never creates a copy or marks a pending task completed. Undo deletion restores the original identifier.
+`data/TaskDao.kt` отдаёт Flow для выбранной даты. `data/TaskRepository.kt` проверяет заголовки и реализует создание, переименование, выполнение/отмену выполнения, перенос, удаление и восстановление. Перенос обновляет scheduledDate в той же строке; он никогда не создаёт копию и не помечает незавершённую задачу выполненной. Отмена удаления восстанавливает исходный идентификатор.
 
-`data/TaskDatabase.kt` is Room schema version 1. Exported schemas live in `app/schemas/`. `data/SettingsRepository.kt` stores reminder enabled/time and scheduling metadata in Preferences DataStore. Reminders default to disabled, time 22:00.
+`data/TaskDatabase.kt` — версия схемы Room 1. Экспортированные схемы лежат в `app/schemas/`. `data/SettingsRepository.kt` хранит признак включения и время напоминания, а также метаданные планирования в Preferences DataStore. По умолчанию напоминания выключены, время — 22:00.
 
-## State and dependency wiring
+## Состояние и связывание зависимостей
 
-`PlannerApplication.kt` creates one Room database, repositories and ReminderScheduler. Dependencies are passed through ViewModel factories without a DI framework. UI collects StateFlow with lifecycle awareness. Each edit commits to Room immediately. Review transfer counts survive recreation via SavedStateHandle but reset for a new review session.
+`PlannerApplication.kt` создаёт одну базу Room, репозитории и ReminderScheduler. Зависимости передаются через фабрики ViewModel без DI-фреймворка. UI собирает StateFlow с учётом жизненного цикла. Каждое изменение сразу сохраняется в Room. Счётчики переносов в разборе переживают пересоздание через SavedStateHandle, но сбрасываются для новой сессии разбора.
 
-## Build from source
+## Сборка из исходников
 
-The repository root contains `settings.gradle.kts`, `build.gradle.kts`, `gradlew.bat` and `gradle/libs.versions.toml`. Open this root in Android Studio. Build a debug APK with `.\\gradlew.bat :app:assembleDebug`. Unit tests use `:app:testDebugUnitTest`, lint uses `:app:lintDebug`, device tests use `:app:connectedDebugAndroidTest`.
+В корне репозитория находятся `settings.gradle.kts`, `build.gradle.kts`, `gradlew.bat` и `gradle/libs.versions.toml`. Откройте этот корень в Android Studio. Debug-APK собирается командой `.\\gradlew.bat :app:assembleDebug`. Юнит-тесты запускаются через `:app:testDebugUnitTest`, lint — через `:app:lintDebug`, тесты на устройстве — через `:app:connectedDebugAndroidTest`.
 
-The Python developer assistant is optional and lives in `developer_assistant/`; Android does not call it. Its MCP server reads Git metadata of this same repository root. No GitLab CLI checkout is required.
+Python-ассистент разработчика необязателен и находится в `developer_assistant/`; Android его не вызывает. Его MCP-сервер читает метаданные Git этого же корня репозитория. Проверка GitLab CLI не требуется.

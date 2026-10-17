@@ -1,0 +1,7 @@
+# Copy to .dev.vars (both local Workers share it). Never commit the real file.
+DEEPSEEK_API_KEY=
+DEEPSEEK_MODEL=deepseek-v4-flash
+MCP_INTERNAL_SECRET=
+# Only for local http://localhost / http://127.0.0.1, never in production:
+ALLOW_INSECURE_LOCAL=true
+OPERATOR_PASSWORD=

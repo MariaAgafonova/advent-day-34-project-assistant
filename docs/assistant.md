@@ -1,10 +1,10 @@
-# RAG/MCP-ассистент разработчика
+# RAG/MCP developer assistant
 
-Дополнительный терминальный Python-инструмент изучает документацию «На сегодня» и Git-контекст того же репозитория. Android-приложение работает самостоятельно: ему не нужны Python и API модели.
+An additional terminal Python tool studies the «На сегодня» documentation and the Git context of the same repository. The Android application works independently: it needs neither Python nor a model API.
 
-## Установка и запуск в PowerShell
+## Installation and launch in PowerShell
 
-Из корня репозитория, Python 3.12:
+From the repository root, Python 3.12:
 
 ```powershell
 py -3.12 -m venv .venv
@@ -12,19 +12,19 @@ py -3.12 -m venv .venv
 Copy-Item .env.example .env
 ```
 
-Для DeepSeek заполните `.env` (настоящий ключ не включайте в Git):
+For DeepSeek fill in `.env` (do not commit a real key to Git):
 
 ```dotenv
-DEEPSEEK_API_KEY=ваш-ключ
+DEEPSEEK_API_KEY=your-key
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-v4-flash
 DEEPSEEK_TIMEOUT_SECONDS=90
 DEEPSEEK_MAX_TOKENS=1024
 ```
 
-Непустой `DEEPSEEK_API_KEY` выбирает DeepSeek, даже если заданы настройки OpenAI. Переменные текущего процесса имеют приоритет над `.env`. Для OpenAI оставьте `DEEPSEEK_API_KEY` пустым и задайте `OPENAI_API_KEY` и `OPENAI_MODEL`.
+A non-empty `DEEPSEEK_API_KEY` selects DeepSeek, even if OpenAI settings are present. Variables of the current process take priority over `.env`. For OpenAI, leave `DEEPSEEK_API_KEY` empty and set `OPENAI_API_KEY` and `OPENAI_MODEL`.
 
-Запуск:
+Launch:
 
 ```powershell
 .\.venv\Scripts\python.exe -m developer_assistant index
@@ -32,30 +32,30 @@ DEEPSEEK_MAX_TOKENS=1024
 .\.venv\Scripts\python.exe -m developer_assistant chat
 ```
 
-Команды чата: `/help`, `/help Как устроен проект?`, `/help Какая сейчас git-ветка?`, `/exit`.
+Chat commands: `/help`, `/help How is the project structured?`, `/help What git branch is current?`, `/exit`.
 
-Без API:
+Without an API:
 
 ```powershell
-.\.venv\Scripts\python.exe -m developer_assistant search "Как добавлять задачи голосом?"
-.\.venv\Scripts\python.exe -m developer_assistant ask "Как устроен проект?" --context-only
+.\.venv\Scripts\python.exe -m developer_assistant search "How do I add tasks by voice?"
+.\.venv\Scripts\python.exe -m developer_assistant ask "How is the project structured?" --context-only
 .\.venv\Scripts\python.exe -m pytest -q -o addopts=
 ```
 
-Первый запуск скачивает multilingual-e5-small. После загрузки при недоступном Hugging Face можно задать `$env:HF_HUB_OFFLINE = "1"`. Три live_api теста пропускаются без API-ключа. С ключом они выполняют настоящие платные запросы выбранного провайдера. Локальные тесты без API: `python -m pytest -q -o addopts= -m "not live_api"`.
+The first launch downloads multilingual-e5-small. After the download, if Hugging Face is unreachable you can set `$env:HF_HUB_OFFLINE = "1"`. The three live_api tests are skipped without an API key. With a key they perform real paid requests to the selected provider. Local tests without an API: `python -m pytest -q -o addopts= -m "not live_api"`.
 
-## Поток данных
+## Data flow
 
-README/документы docs → фрагменты по разделам с путём и строками → multilingual sentence-transformers embeddings → локальный Chroma → до 6 фрагментов по вопросу → DeepSeek Chat Completions либо OpenAI Responses API → русский ответ с источниками путь:строки. Переиндексация меняет снимок, переиспользует неизменённые embeddings и убирает удалённые документы.
+README/docs documents → fragments by section with path and lines → multilingual sentence-transformers embeddings → local Chroma → up to 6 fragments per question → DeepSeek Chat Completions or OpenAI Responses API → Russian answer with path:line sources. Reindexing replaces the snapshot, reuses unchanged embeddings and removes deleted documents.
 
-DeepSeek получает JSON schema и пример формата в системной инструкции; JSON Output проверяется локально через Pydantic, затем проверяются ID источников. Для ответа о структуре при доступных документах и MCP_FILES обязательны ссылки на обе группы источников; ответ без них отклоняется. Неполный или обрезанный ответ не показывается как готовый: увеличьте `DEEPSEEK_MAX_TOKENS`, если 1024 не хватает. Thinking отключён для коротких ответов. Таймаут относится к одной попытке; SDK допускает один повтор запроса.
+DeepSeek receives a JSON schema and a format example in the system instruction; the JSON Output is validated locally through Pydantic, then the source IDs are checked. For an answer about the structure, when documents and MCP_FILES are available, references to both groups of sources are mandatory; an answer without them is rejected. An incomplete or truncated answer is not shown as finished: increase `DEEPSEEK_MAX_TOKENS` if 1024 is not enough. Thinking is disabled for short answers. The timeout applies to a single attempt; the SDK allows one request retry.
 
-По [официальной документации DeepSeek](https://api-docs.deepseek.com/quick_start/pricing/) имя `deepseek-v4-flash` остаётся допустимым устаревшим псевдонимом и обслуживается текущей Flash-моделью; рекомендованное имя — `deepseek-flash`. Настройка пользователя не заменяется автоматически. Проверены [JSON Output](https://api-docs.deepseek.com/guides/json_mode/) и [Thinking Mode](https://api-docs.deepseek.com/guides/thinking_mode/) 15.10.2026.
+According to the [official DeepSeek documentation](https://api-docs.deepseek.com/quick_start/pricing/), the name `deepseek-v4-flash` remains a valid legacy alias and is served by the current Flash model; the recommended name is `deepseek-flash`. User settings are not replaced automatically. [JSON Output](https://api-docs.deepseek.com/guides/json_mode/) and [Thinking Mode](https://api-docs.deepseek.com/guides/thinking_mode/) were verified on 15.10.2026.
 
-MCP SDK запускает отдельный stdio-процесс. `get_current_branch` и `list_project_files` читают фиксированный корень этого репозитория через Git со списком аргументов и таймаутом. В контексте модели документация и факты checkout разделены. Текст документов считается недоверенными данными.
+The MCP SDK launches a separate stdio process. `get_current_branch` and `list_project_files` read the fixed root of this repository through Git with an argument list and a timeout. In the model context, documentation and checkout facts are kept separate. Document text is treated as untrusted data.
 
-## Ограничения
+## Limitations
 
-На этой Windows-машине нативный HNSW вызывал сбой, поэтому используется сохраняемый в SQLite точный буфер Chroma. Поиск линейный и подходит для небольшого учебного корпуса. Не выполняйте переиндексацию одновременно с работающим чатом. Индекс и кеш модели не включаются в Git.
+On this Windows machine the native HNSW caused a failure, so an exact Chroma buffer persisted in SQLite is used. Search is linear and suitable for a small training corpus. Do not reindex while the chat is running. The index and the model cache are not committed to Git.
 
-Наличие цитат и проверка ID источников не гарантируют семантическую точность модели. Отсутствие документации не доказывает отсутствия функции. При незаданном ключе приложение не подменяет ответы заготовками.
+The presence of citations and the source ID check do not guarantee the semantic accuracy of the model. The absence of documentation does not prove the absence of a feature. When no key is set, the application does not replace answers with canned text.

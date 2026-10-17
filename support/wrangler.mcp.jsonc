@@ -1,0 +1,8 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "day33-support-mcp", "main": "src/mcp-worker.ts",
+  "compatibility_date": "2026-10-16", "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "d1_databases": [{ "binding": "DB", "database_name": "advent-day-33-support", "database_id": "1104a90d-a78e-4c5f-b1b5-fa22b11aee8d", "migrations_dir": "migrations" }],
+  "observability": { "enabled": false }
+}

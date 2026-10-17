@@ -1,39 +1,39 @@
-# План реализации «На сегодня»
+# Implementation plan for «На сегодня»
 
-## Цель MVP
+## MVP goal
 
-Пользователь планирует дела на любой день, отмечает выполнение, редактирует и переносит задачи без дубликатов. Вечером получает неточное напоминание и вручную разбирает оставшиеся дела. Все данные локальные; без регистрации, синхронизации и собственного сервера.
+The user plans tasks for any day, marks them as completed, edits and moves tasks without duplicates. In the evening the user receives an inexact reminder and reviews the remaining tasks manually. All data is local; there is no registration, synchronization or own server.
 
-## Этапы и критерии готовности
+## Milestones and acceptance criteria
 
-1. Каркас: один app-модуль, Kotlin DSL/Version Catalog, Compose Material 3, Navigation Compose. Debug APK собирается.
-2. Данные: Room Task(id, title, scheduledDate, createdAt, completedAt), DAO и repository; Preferences DataStore(enabled, local time). Выполнение/отмена/перенос проверены тестами.
-3. Сегодня: выбор даты, предыдущий/следующий день, возврат сегодня, счётчик, выполненные сворачиваются, CRUD, перенос, Snackbar отмены удаления. Пустое название запрещено.
-4. Голос: RECORD_AUDIO, SpeechRecognizer, явный разделитель «новая задача», редактируемый предпросмотр, удаление/добавление/объединение/разделение, ошибки и освобождение recognizer.
-5. Разбор: конкретная дата, только незавершённые, действия сохраняются сразу. Завтра считается от даты разбора. Итог показывает выполненные задачи этого дня и переносы текущего сеанса.
-6. Напоминания: DataStore, 22:00, runtime POST_NOTIFICATIONS, inexact AlarmManager, одна PendingIntent, корректный экран и Back, перепланирование после boot/time/timezone/package replaced.
-7. Календарь: прошлое и будущее, границы месяца/года/високосный день. Перенос не считается выполнением.
-8. Приёмка: unit, instrumented Room/UI, lint, APK, ручная проверка эмулятора, темы и крупный шрифт. Невыполненные проверки явно перечислены.
+1. Skeleton: one app module, Kotlin DSL/Version Catalog, Compose Material 3, Navigation Compose. A debug APK builds.
+2. Data: Room Task(id, title, scheduledDate, createdAt, completedAt), DAO and repository; Preferences DataStore(enabled, local time). Completion/cancellation/moving are covered by tests.
+3. Today: date selection, previous/next day, return to today, counter, completed tasks collapse, CRUD, moving, undo-deletion Snackbar. An empty title is forbidden.
+4. Voice: RECORD_AUDIO, SpeechRecognizer, an explicit «новая задача» separator, editable preview, delete/add/merge/split, errors and recognizer release.
+5. Review: a specific date, incomplete tasks only, actions are saved immediately. Tomorrow is counted from the review date. The summary shows the completed tasks of that day and the moves of the current session.
+6. Reminders: DataStore, 22:00, runtime POST_NOTIFICATIONS, inexact AlarmManager, one PendingIntent, correct screen and Back, rescheduling after boot/time/timezone/package replaced.
+7. Calendar: past and future, month/year boundaries and a leap day. A move is not counted as completion.
+8. Acceptance: unit tests, instrumented Room/UI tests, lint, APK, manual emulator check, themes and large font. Checks that were not performed are listed explicitly.
 
-## Архитектура
+## Architecture
 
-MainActivity → Navigation Compose → Day/Review/Voice/Settings экраны → ViewModel StateFlow → repository → Room/DataStore. Ручное внедрение через Application container, без DI-фреймворка, сервера, дополнительных модулей.
+MainActivity → Navigation Compose → Day/Review/Voice/Settings screens → ViewModel StateFlow → repository → Room/DataStore. Manual injection through the Application container, with no DI framework, server or additional modules.
 
-## Семантика дат и состояния
+## Date and state semantics
 
-Дата плана — LocalDate/epochDay, независима от зоны. Временные отметки — Instant/epoch millis. Сегодня вычисляется в текущей зоне и обновляется при возврате в приложение и смене даты/зоны. Календарь Material использует UTC millis только для отображения выбранной даты.
+The planned date is LocalDate/epochDay and independent of the time zone. Timestamps are Instant/epoch millis. Today is calculated in the current zone and refreshed when the app returns to the foreground and when the date/zone changes. The Material calendar uses UTC millis only to display the selected date.
 
-Счётчик разбора: число выполненных записей, запланированных на его дату; переносы — количество успешных перемещений в текущем сеансе. После нового открытия счётчик переносов начинается с нуля; изменение конфигурации сохраняет сеанс.
+Review counter: the number of completed records scheduled for that date; moves are the number of successful relocations in the current session. After reopening, the move counter starts from zero; a configuration change keeps the session.
 
-## Напоминания
+## Reminders
 
-Одноразовый AlarmManager.setAndAllowWhileIdle(RTC_WAKEUP), фиксированная PendingIntent, следующее срабатывание по LocalTime и ZoneId.systemDefault. Смена настроек отменяет предыдущее событие. При доставке используется дата исходного alarm, даже при задержке за полночь. Для защиты от устаревших событий проверяется сохранённый token. После reboot/time/date/timezone reschedule. Exact alarms не запрашиваются.
+A one-shot AlarmManager.setAndAllowWhileIdle(RTC_WAKEUP), a fixed PendingIntent, the next trigger by LocalTime and ZoneId.systemDefault. Changing settings cancels the previous event. On delivery the original alarm date is used, even when the delivery is delayed past midnight. A stored token is checked to protect against stale events. Rescheduling after reboot/time/date/timezone. Exact alarms are not requested.
 
-## Голос и приватность
+## Voice and privacy
 
-SpeechRecognizer работает только по явному действию пользователя, на main thread, cancel/destroy при выходе. Нет записи аудио в файлы. Распознанный текст не сохраняется до подтверждения. Провайдер распознавания может передавать аудио на свои серверы; офлайн-работа не гарантируется.
+SpeechRecognizer works only on an explicit user action, on the main thread, with cancel/destroy on exit. There is no writing of audio to files. The recognized text is not stored until confirmation. The recognition provider may transmit audio to its own servers; offline operation is not guaranteed.
 
-## Официальные источники, проверены 15.10.2026
+## Official sources, verified 15.10.2026
 
 - https://developer.android.com/develop/background-work/services/alarms
 - https://developer.android.com/develop/ui/views/notifications/notification-permission

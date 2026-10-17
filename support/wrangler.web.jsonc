@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "day33-support-web", "main": "src/worker.ts",
+  "workers_dev": true,
+  "compatibility_date": "2026-10-16", "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": "dist", "binding": "ASSETS", "not_found_handling": "single-page-application", "run_worker_first": ["/api/*"] },
+  "d1_databases": [{ "binding": "DB", "database_name": "advent-day-33-support", "database_id": "1104a90d-a78e-4c5f-b1b5-fa22b11aee8d", "migrations_dir": "migrations" }],
+  "services": [{ "binding": "CRM_MCP", "service": "day33-support-mcp" }],
+  "vars": { "DEEPSEEK_MODEL": "deepseek-v4-flash" },
+  "observability": { "enabled": false }
+}

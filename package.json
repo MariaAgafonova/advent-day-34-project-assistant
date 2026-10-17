@@ -1,0 +1,5 @@
+{
+  "name": "day34-project-assistant",
+  "private": true,
+  "scripts": { "project-assistant": "node project-assistant/dist/cli.js" }
+}

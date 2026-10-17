@@ -1,0 +1,52 @@
+{
+  "name": "day33-support",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "vite build",
+    "dev": "npm run build && wrangler dev -c wrangler.web.jsonc -c wrangler.mcp.jsonc --persist-to .wrangler/state --port 8787",
+    "dev:web": "wrangler dev -c wrangler.web.jsonc --persist-to .wrangler/state --port 8787",
+    "dev:mcp": "wrangler dev -c wrangler.mcp.jsonc --persist-to .wrangler/state --port 8788",
+    "dev:ui": "vite --host 127.0.0.1",
+    "db:migrate": "wrangler d1 migrations apply advent-day-33-support --local -c wrangler.web.jsonc --persist-to .wrangler/state",
+    "db:seed": "wrangler d1 execute advent-day-33-support --local -c wrangler.web.jsonc --persist-to .wrangler/state --file seed.sql",
+    "index": "tsx scripts/index.ts",
+    "dry-run": "npm run build && wrangler deploy -c wrangler.mcp.jsonc --dry-run && wrangler deploy -c wrangler.web.jsonc --dry-run",
+    "deploy:mcp": "wrangler deploy -c wrangler.mcp.jsonc",
+    "deploy:web": "npm run build && wrangler deploy -c wrangler.web.jsonc",
+    "deploy:all": "npm run build && wrangler deploy -c wrangler.mcp.jsonc && wrangler deploy -c wrangler.web.jsonc && tsx scripts/secrets.ts",
+    "secrets:upload": "tsx scripts/secrets.ts",
+    "operator:setup": "tsx scripts/operator-access.ts",
+    "test:e2e": "playwright test",
+    "test:live": "tsx scripts/live.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.3.1",
+    "@modelcontextprotocol/server": "2.3.1",
+    "agents": "0.28.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-markdown": "10.1.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.4.4",
+    "@cloudflare/workers-types": "5.20261016.1",
+    "@playwright/test": "1.64.1",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "vitest": "4.1.12",
+    "wrangler": "4.151.1"
+  }
+}
